@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+    --brand-primary: #059669;
+    --brand-accent: #10b981;
+  }
+
+  .dark {
+    --background: 220 40% 6%;
+    --foreground: 210 20% 98%;
+    --brand-primary: #10b981;
+    --brand-accent: #059669;
+  }
+}
+
+/* Explicit Emerald Teal Theme Overrides */
+.bg-brand-600 {
+  background-color: #059669 !important;
+}
+
+.bg-brand-500 {
+  background-color: #10b981 !important;
+}
+
+.text-brand-600 {
+  color: #059669 !important;
+}
+
+.text-brand-500, .text-brand-400 {
+  color: #10b981 !important;
+}
+
+.border-brand-600, .border-brand-500 {
+  border-color: #10b981 !important;
+}
+
+.shadow-brand-500\/20, .shadow-brand-500\/25, .shadow-brand-600\/30 {
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4) !important;
+}
+
+body {
+  @apply bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 antialiased min-h-screen transition-colors duration-200;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Stitch Design System Glassmorphic Cards */
+.glass-panel {
+  @apply bg-white/90 dark:bg-[#161b26]/90 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-glass-card;
+}
+
+.glass-card-hover {
+  @apply transition-all duration-300 hover:border-emerald-500/50 hover:shadow-glow-brand;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-800 rounded-full hover:bg-slate-400 dark:hover:bg-slate-700;
+}
