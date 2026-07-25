@@ -10,8 +10,11 @@ import {
   Code2,
   CheckSquare,
   Layers,
+  FileType,
+  Printer,
 } from 'lucide-react';
 import { PRDOutput, UserStoriesOutput, AcceptanceCriteriaOutput } from '@/lib/ai/types';
+import { ExportService } from '@/lib/export/export-service';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -33,127 +36,7 @@ export function ExportModal({
 
   if (!isOpen) return null;
 
-  const generateExportText = (): string => {
-    if (format === 'json') {
-      return JSON.stringify({ title, type, content }, null, 2);
-    }
-
-    if (type === 'PRD') {
-      const prd = content as PRDOutput;
-      if (format === 'jira') {
-        return `h1. ${title} - Product Requirements Document
-
-h2. 1. Product Overview
-${prd.productOverview}
-
-h2. 2. Problem Statement
-${prd.problemStatement}
-
-h2. 3. Business Goals
-${prd.businessGoals.map((bg) => `* ${bg}`).join('\n')}
-
-h2. 4. User Personas
-${prd.userPersonas.map((p) => `* *${p.name}* (${p.role}): Pain Points: ${p.painPoints.join(', ')}`).join('\n')}
-
-h2. 5. User Journey
-${prd.userJourney.map((step, i) => `${i + 1}. ${step}`).join('\n')}
-
-h2. 6. Functional Requirements & RICE Scores
-${prd.functionalRequirements.map((fr) => `* *[${fr.id}]* (${fr.priority}) *${fr.title}*: ${fr.description} ${fr.rice ? `(RICE Score: ${fr.rice.score})` : ''}`).join('\n')}
-
-h2. 7. Non-Functional Requirements
-${prd.nonFunctionalRequirements.map((nfr) => `* ${nfr}`).join('\n')}
-
-h2. 8. User Stories
-${prd.userStories.map((s) => `* *[${s.id}]*: "${s.formattedStory}"`).join('\n')}
-
-h2. 9. Acceptance Criteria
-${prd.acceptanceCriteria.map((ac) => `h3. ${ac.id}\n* *GIVEN* ${ac.given}\n* *WHEN* ${ac.when}\n* *THEN* ${ac.then}`).join('\n\n')}
-
-h2. 10. Success Metrics
-${prd.successMetrics.map((m) => `* ${m}`).join('\n')}
-
-h2. 11. Risks & Mitigations
-${prd.risks.map((r) => `* *Risk:* ${r.risk} | *Mitigation:* ${r.mitigation}`).join('\n')}`;
-      }
-
-      // Linear / Markdown / Confluence
-      return `# ${title} — Product Requirements Document
-
-## 1. Product Overview
-${prd.productOverview}
-
-## 2. Problem Statement
-> ${prd.problemStatement}
-
-## 3. Business Goals
-${prd.businessGoals.map((g) => `- [ ] ${g}`).join('\n')}
-
-## 4. Target User Personas
-${prd.userPersonas.map((p) => `- **${p.name}** (${p.role}): Pain Points: ${p.painPoints.join(', ')}`).join('\n')}
-
-## 5. End-to-End User Journey
-${prd.userJourney.map((step, i) => `${i + 1}. ${step}`).join('\n')}
-
-## 6. Functional Requirements & RICE Scores
-${prd.functionalRequirements.map((fr) => `- **[${fr.id}]** \`${fr.priority}\` **${fr.title}:** ${fr.description} ${fr.rice ? `*(RICE Score: ${fr.rice.score} pts)*` : ''}`).join('\n')}
-
-## 7. Non-Functional Requirements
-${prd.nonFunctionalRequirements.map((nfr) => `- ${nfr}`).join('\n')}
-
-## 8. User Stories
-${prd.userStories.map((s) => `- **[${s.id}]** \`${s.priority}\`: "${s.formattedStory}"`).join('\n')}
-
-## 9. Acceptance Criteria
-${prd.acceptanceCriteria.map((ac) => `### ${ac.id}\n- **GIVEN** ${ac.given}\n- **WHEN** ${ac.when}\n- **THEN** ${ac.then}`).join('\n\n')}
-
-## 10. Success Metrics
-${prd.successMetrics.map((m) => `- ${m}`).join('\n')}
-
-## 11. Risks & Mitigations
-${prd.risks.map((r) => `- **Risk:** ${r.risk} | **Mitigation:** ${r.mitigation}`).join('\n')}`;
-    }
-
-    if (type === 'UserStory') {
-      const stories = content as UserStoriesOutput;
-      if (format === 'jira') {
-        return `h2. User Stories for ${stories.featureName}\n\n` +
-          stories.stories
-            .map((s) => `* *${s.id}* [${s.priority} Priority] ${s.formattedStory} (Effort: ${s.estimatedEffort})`)
-            .join('\n');
-      }
-      return `# User Stories: ${stories.featureName}\n\n` +
-        stories.stories
-          .map((s) => `- [ ] **${s.id}** \`${s.priority}\`: "${s.formattedStory}" *(Effort: ${s.estimatedEffort})*`)
-          .join('\n');
-    }
-
-    if (type === 'AcceptanceCriteria') {
-      const criteria = content as AcceptanceCriteriaOutput;
-      if (format === 'jira') {
-        return `h2. Acceptance Criteria: ${criteria.featureName}\n*Story:* ${criteria.userStory}\n\n` +
-          criteria.criteria
-            .map(
-              (c) =>
-                `h3. ${c.id}\n* *GIVEN* ${c.given}\n* *WHEN* ${c.when}\n* *THEN* ${c.then}\n\n*Checklist:*\n` +
-                c.checklistItems.map((ci) => `* [ ] ${ci}`).join('\n')
-            )
-            .join('\n\n');
-      }
-      return `# Acceptance Criteria: ${criteria.featureName}\n> ${criteria.userStory}\n\n` +
-        criteria.criteria
-          .map(
-            (c) =>
-              `### ${c.id}\n- **GIVEN** ${c.given}\n- **WHEN** ${c.when}\n- **THEN** ${c.then}\n\n**Verification Checklist:**\n` +
-              c.checklistItems.map((ci) => `- [ ] ${ci}`).join('\n')
-          )
-          .join('\n\n');
-    }
-
-    return '';
-  };
-
-  const exportText = generateExportText();
+  const exportText = ExportService.generateTextExport(title, type, content, format);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(exportText);
@@ -161,7 +44,7 @@ ${prd.risks.map((r) => `- **Risk:** ${r.risk} | **Mitigation:** ${r.mitigation}`
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDownload = () => {
+  const handleDownloadFile = () => {
     const ext = format === 'json' ? 'json' : 'md';
     const blob = new Blob([exportText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -170,6 +53,14 @@ ${prd.risks.map((r) => `- **Risk:** ${r.risk} | **Mitigation:** ${r.mitigation}`
     a.download = `${title.toLowerCase().replace(/\s+/g, '-')}-${format}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = () => {
+    ExportService.exportPDF(title, type, content);
+  };
+
+  const handleExportDOCX = () => {
+    ExportService.exportDOCX(title, type, content);
   };
 
   return (
@@ -183,10 +74,10 @@ ${prd.risks.map((r) => `- **Risk:** ${r.risk} | **Mitigation:** ${r.mitigation}`
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Multi-Platform Exporter (11 Sections)
+                Multi-Platform Exporter (PDF, DOCX, Jira, Linear)
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Format and export <span className="font-semibold">{title}</span> for your product tools
+                Format and export <span className="font-semibold">{title}</span> for your product workflow
               </p>
             </div>
           </div>
@@ -268,10 +159,24 @@ ${prd.risks.map((r) => `- **Risk:** ${r.risk} | **Mitigation:** ${r.mitigation}`
         </div>
 
         {/* Actions Bar */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
-          <span className="text-xs text-slate-400 font-mono">
-            Format: {format.toUpperCase()}
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportPDF}
+              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 border border-red-500/20 flex items-center gap-1.5 transition-colors"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              PDF Export
+            </button>
+
+            <button
+              onClick={handleExportDOCX}
+              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 flex items-center gap-1.5 transition-colors"
+            >
+              <FileType className="h-3.5 w-3.5" />
+              DOCX File
+            </button>
+          </div>
 
           <div className="flex items-center gap-2">
             <button
@@ -292,7 +197,7 @@ ${prd.risks.map((r) => `- **Risk:** ${r.risk} | **Mitigation:** ${r.mitigation}`
             </button>
 
             <button
-              onClick={handleDownload}
+              onClick={handleDownloadFile}
               className="px-4 py-2 text-xs font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-700 flex items-center gap-1.5 transition-colors shadow-sm"
             >
               <Download className="h-3.5 w-3.5" />

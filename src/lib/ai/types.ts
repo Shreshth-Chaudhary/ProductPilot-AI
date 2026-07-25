@@ -1,5 +1,22 @@
 export type TemplateCategory = 'saas' | 'mobile' | 'ai' | 'api' | 'ecommerce' | 'custom';
 
+export type AIReasoningStage =
+  | 'UNDERSTANDING'
+  | 'STRATEGY'
+  | 'PERSONAS'
+  | 'REQUIREMENTS'
+  | 'STORIES'
+  | 'RICE'
+  | 'VALIDATION'
+  | 'COMPLETE';
+
+export interface PRDPipelineProgress {
+  stage: AIReasoningStage;
+  progressPercent: number;
+  currentStageName: string;
+  reasoningDetail: string;
+}
+
 export interface PRDInput {
   productName: string;
   productDescription?: string;
@@ -90,6 +107,13 @@ export interface PRDOutput {
   acceptanceCriteria: AcceptanceCriteriaItem[];
   successMetrics: string[];
   risks: RiskItem[];
+}
+
+export interface DocumentVersion {
+  id: string;
+  timestamp: string;
+  note: string;
+  content: PRDOutput;
 }
 
 export interface SavedDocument {
